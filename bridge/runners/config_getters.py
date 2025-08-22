@@ -10,6 +10,7 @@ from functools import partial
 from .logger import CSVLogger, WandbLogger, Logger
 from torch.utils.data import DataLoader
 from bridge.data.afhq import AFHQ
+from bridge.data.temperature import TemperatureDataset
 from bridge.data.downscaler import DownscalerDataset
 
 cmp = lambda x: transforms.Compose([*x])
@@ -169,6 +170,7 @@ DATASET_MNIST = 'mnist'
 DATASET_EMNIST = 'emnist'
 DATASET_CIFAR10 = 'cifar10'
 DATASET_AFHQ = 'afhq'
+DATASET_TEMPERATURE = 'temperature'
 DATASET_DOWNSCALER_LOW = 'downscaler_low'
 DATASET_DOWNSCALER_HIGH = 'downscaler_high'
 
@@ -207,6 +209,11 @@ def get_datasets(args):
         assert args.data.image_size == 512
         animal_type = dataset_tag.split('_')[1]
         init_ds = AFHQ(root_dir=os.path.join(args.paths.afhq_path, 'train'), animal_type=animal_type)
+
+    # TEMPERATURE DATASET
+    if dataset_tag.startswith(DATASET_TEMPERATURE):
+        assert args.data.image_size == 64
+        init_ds = TemperatureDataset(month="01")
 
     # Downscaler dataset
     if dataset_tag == DATASET_DOWNSCALER_HIGH:
@@ -252,6 +259,11 @@ def get_final_dataset(args, init_ds):
             assert args.data.image_size == 512
             animal_type = dataset_transfer_tag.split('_')[1]
             final_ds = AFHQ(root_dir=os.path.join(args.paths.afhq_path, 'train'), animal_type=animal_type)
+
+        # AFHQ TEMPERATURE
+        if dataset_transfer_tag.startswith(DATASET_TEMPERATURE):
+            assert args.data.image_size == 64
+            final_ds = TemperatureDataset(month="05")
 
         if dataset_transfer_tag == DATASET_DOWNSCALER_LOW:
             root = os.path.join(data_dir, 'downscaler')
